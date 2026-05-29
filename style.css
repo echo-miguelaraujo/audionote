@@ -1,0 +1,30 @@
+/* Reset básico e fontes */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; color: #333; line-height: 1.6; padding: 20px; }
+
+.container { max-width: 900px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+h1 { text-align: center; margin-bottom: 10px; color: #2c3e50; }
+p { text-align: center; margin-bottom: 30px; color: #7f8c8d; }
+
+/* Botões */
+.controls { display: flex; justify-content: center; gap: 15px; margin-bottom: 30px; }
+.btn { padding: 12px 24px; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.3s, opacity 0.3s; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn.primary { background-color: #3498db; color: white; }
+.btn.primary:hover:not(:disabled) { background-color: #2980b9; }
+.btn.danger { background-color: #e74c3c; color: white; }
+.btn.danger:hover:not(:disabled) { background-color: #c0392b; }
+
+/* Feedback de Carregamento */
+.loading { text-align: center; margin-bottom: 30px; }
+.loading.hidden { display: none; }
+.spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 0 auto 10px auto; }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+/* Grid de Resultados */
+.results-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 768px) { .results-grid { grid-template-columns: 1fr; } }
+.result-card h2 { font-size: 18px; margin-bottom: 10px; color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 5px; }
+.content-box { background: #fafafa; border: 1px solid #e0e0e0; border-radius: 6px; padding: 15px; min-height: 250px; overflow-y: auto; white-space: pre-wrap; font-size: 15px; }
+.placeholder { color: #bdc3c7; font-style: italic; }
+.bullet-point { margin-left: 20px; margin-bottom: 5px; }
