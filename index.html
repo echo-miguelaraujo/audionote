@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gravador e Resumidor de Áudio IA</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🎙️ Assistente de Reuniões com IA</h1>
+        <p>Grave seu áudio e deixe o Gemini transcrever e resumir o conteúdo para você.</p>
+
+        <div class="controls">
+            <button id="btnStart" class="btn primary">Iniciar Gravação</button>
+            <button id="btnStop" class="btn danger" disabled>Parar Gravação</button>
+        </div>
+
+        <div id="loadingIndicator" class="loading hidden">
+            <div class="spinner"></div>
+            <p>Processando com IA... Isso pode levar alguns segundos.</p>
+        </div>
+
+        <div class="results-grid">
+            <div class="result-card">
+                <h2>Transcrição Completa</h2>
+                <div id="transcriptionBox" class="content-box">
+                    <span class="placeholder">A transcrição aparecerá aqui...</span>
+                </div>
+            </div>
+
+            <div class="result-card">
+                <h2>Resumo Organizado</h2>
+                <div id="summaryBox" class="content-box">
+                    <span class="placeholder">O resumo aparecerá aqui...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
