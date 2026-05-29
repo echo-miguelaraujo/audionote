@@ -13,7 +13,7 @@ let textoOriginal = "";
 let textoResumo = "";
 let abaAtual = 'original';
 
-// ⚠️ Sua chave de API aplicada diretamente no frontend (Apenas para testes!)
+// Sua chave de API
 const API_KEY = "AQ.Ab8RN6KLEy2gDBkTB6L7AAJZ2tDWR1afz-sQJCoQmzu6Ulgadg";
 
 recordBtn.addEventListener('click', async () => {
@@ -38,8 +38,11 @@ async function iniciarGravacao() {
         };
 
         mediaRecorder.onstop = async () => {
-            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-            await processarAudioComGemini(audioBlob);
+            // Pegamos o formato exato que o seu celular usa (webm, mp4, etc)
+            const formatoAudio = mediaRecorder.mimeType || 'audio/webm';
+            const audioBlob = new Blob(audioChunks, { type: formatoAudio });
+            
+            await processarAudioComGemini(audioBlob, formatoAudio);
             stream.getTracks().forEach(track => track.stop());
         };
 
@@ -52,7 +55,7 @@ async function iniciarGravacao() {
         textoResumo = "";
 
     } catch (err) {
-        alert("Erro ao acessar o microfone. Verifique as permissões do navegador no seu celular.");
+        alert("Erro ao acessar o microfone.");
         console.error(err);
     }
 }
@@ -65,56 +68,60 @@ function pararGravacao() {
     }
 }
 
-// 🧠 NOVA FUNÇÃO: Conversa direto com o Google sem precisar do Node.js
-async function processarAudioComGemini(audioBlob) {
+// Passamos o formato do áudio como parâmetro agora
+async function processarAudioComGemini(audioBlob, formatoAudio) {
     contentArea.innerHTML = '<p class="placeholder-text">Processando com IA... (Pode demorar uns segundos)</p>';
 
-    // 1. O Google pede que o áudio seja enviado em texto (Base64). Vamos converter o Blob:
     const reader = new FileReader();
     reader.readAsDataURL(audioBlob);
     
     reader.onloadend = async () => {
         try {
-            // O resultado do reader vem assim: "data:audio/webm;base64,GkXfo59ChoEB..."
-            // Nós só queremos a parte depois da vírgula.
             const base64AudioData = reader.result.split(',')[1];
+            
+            // Tratamento extra caso o celular inclua codecs no mimeType (ex: audio/webm;codecs=opus)
+            // O Google prefere apenas a primeira parte
+            const mimeTypeLimpo = formatoAudio.split(';')[0];
 
-            // 2. Montamos o pacote de dados para enviar via Internet (REST API)
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
             
             const payload = {
                 contents: [{
                     parts: [
                         { text: "Ouça este áudio. Aja como um assistente de anotações. Retorne EXATAMENTE um objeto JSON com duas propriedades: 'transcricaoCompleta' (contendo a transcrição exata, com pontuação) e 'resumoOrganizado' (contendo um resumo em tópicos, sem inventar informações)." },
-                        { inlineData: { mimeType: "audio/webm", data: base64AudioData } }
+                        { inlineData: { mimeType: mimeTypeLimpo, data: base64AudioData } }
                     ]
                 }],
                 generationConfig: { responseMimeType: "application/json" }
             };
 
-            // 3. Disparamos a requisição direta para o Google
             const response = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
 
-            if (!response.ok) throw new Error('Erro na comunicação com a API do Gemini.');
+            if (!response.ok) {
+                const erroDetalhado = await response.text();
+                throw new Error(`Erro do Google: ${response.status} - ${erroDetalhado}`);
+            }
 
             const data = await response.json();
+            let respostaEmTexto = data.candidates[0].content.parts[0].text;
 
-            // 4. A resposta vem dentro de um caminho específico no JSON do Google
-            const respostaEmTexto = data.candidates[0].content.parts[0].text;
+            // Limpeza de segurança: removemos crases e "json" caso a IA envie formatado como código Markdown
+            respostaEmTexto = respostaEmTexto.replace(/```json/g, '').replace(/```/g, '').trim();
+
             const dadosFinais = JSON.parse(respostaEmTexto);
 
-            // 5. Guardamos e atualizamos a tela
             textoOriginal = dadosFinais.transcricaoCompleta;
             textoResumo = dadosFinais.resumoOrganizado;
             atualizarTela();
 
         } catch (error) {
             console.error(error);
-            contentArea.innerHTML = '<p class="placeholder-text" style="color: #ff3b30;">Erro ao processar áudio com a IA.</p>';
+            // Agora o erro exato vai aparecer na sua tela!
+            contentArea.innerHTML = `<p class="placeholder-text" style="color: #ff3b30; font-size: 14px; text-align: left;"><strong>Erro:</strong> ${error.message}</p>`;
         }
     };
 }
