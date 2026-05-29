@@ -3,39 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gravador e Resumidor de Áudio IA</title>
+    <title>Gravador Minimalista com IA</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>🎙️ Assistente de Reuniões com IA</h1>
-        <p>Grave seu áudio e deixe o Gemini transcrever e resumir o conteúdo para você.</p>
-
-        <div class="controls">
-            <button id="btnStart" class="btn primary">Iniciar Gravação</button>
-            <button id="btnStop" class="btn danger" disabled>Parar Gravação</button>
+    <div class="app-container">
+        <div class="top-glow"></div>
+        
+        <div class="content-area" id="contentArea">
+            <p class="placeholder-text" id="statusText">Toque no botão abaixo para gravar.</p>
         </div>
 
-        <div id="loadingIndicator" class="loading hidden">
-            <div class="spinner"></div>
-            <p>Processando com IA... Isso pode levar alguns segundos.</p>
-        </div>
-
-        <div class="results-grid">
-            <div class="result-card">
-                <h2>Transcrição Completa</h2>
-                <div id="transcriptionBox" class="content-box">
-                    <span class="placeholder">A transcrição aparecerá aqui...</span>
-                </div>
-            </div>
-
-            <div class="result-card">
-                <h2>Resumo Organizado</h2>
-                <div id="summaryBox" class="content-box">
-                    <span class="placeholder">O resumo aparecerá aqui...</span>
-                </div>
+        <div class="bottom-controls">
+            <div class="tab-toggle">
+                <span id="tabOriginal" class="active">Original</span>
+                <span class="separator">|</span>
+                <span id="tabResumo">Resumo</span>
             </div>
         </div>
+    </div>
+    
+    <div class="record-button-container">
+        <button id="recordBtn" class="record-btn"></button>
     </div>
 
     <script src="script.js"></script>
