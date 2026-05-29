@@ -13,7 +13,7 @@ let textoOriginal = "";
 let textoResumo = "";
 let abaAtual = 'original';
 
-// Sua chave de API
+// Sua nova chave do Google AI Studio (Formato AQ. válido)
 const API_KEY = "AQ.Ab8RN6KLEy2gDBkTB6L7AAJZ2tDWR1afz-sQJCoQmzu6Ulgadg";
 
 recordBtn.addEventListener('click', async () => {
@@ -38,7 +38,6 @@ async function iniciarGravacao() {
         };
 
         mediaRecorder.onstop = async () => {
-            // Pegamos o formato exato que o seu celular usa (webm, mp4, etc)
             const formatoAudio = mediaRecorder.mimeType || 'audio/webm';
             const audioBlob = new Blob(audioChunks, { type: formatoAudio });
             
@@ -68,7 +67,6 @@ function pararGravacao() {
     }
 }
 
-// Passamos o formato do áudio como parâmetro agora
 async function processarAudioComGemini(audioBlob, formatoAudio) {
     contentArea.innerHTML = '<p class="placeholder-text">Processando com IA... (Pode demorar uns segundos)</p>';
 
@@ -78,12 +76,10 @@ async function processarAudioComGemini(audioBlob, formatoAudio) {
     reader.onloadend = async () => {
         try {
             const base64AudioData = reader.result.split(',')[1];
-            
-            // Tratamento extra caso o celular inclua codecs no mimeType (ex: audio/webm;codecs=opus)
-            // O Google prefere apenas a primeira parte
             const mimeTypeLimpo = formatoAudio.split(';')[0];
 
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+            // REMOVEMOS A CHAVE DO LINK
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent`;
             
             const payload = {
                 contents: [{
@@ -97,7 +93,11 @@ async function processarAudioComGemini(audioBlob, formatoAudio) {
 
             const response = await fetch(url, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    // AGORA ENVIAMOS A CHAVE AQUI NO CABEÇALHO!
+                    'x-goog-api-key': API_KEY 
+                },
                 body: JSON.stringify(payload)
             });
 
@@ -109,9 +109,7 @@ async function processarAudioComGemini(audioBlob, formatoAudio) {
             const data = await response.json();
             let respostaEmTexto = data.candidates[0].content.parts[0].text;
 
-            // Limpeza de segurança: removemos crases e "json" caso a IA envie formatado como código Markdown
             respostaEmTexto = respostaEmTexto.replace(/```json/g, '').replace(/```/g, '').trim();
-
             const dadosFinais = JSON.parse(respostaEmTexto);
 
             textoOriginal = dadosFinais.transcricaoCompleta;
@@ -120,7 +118,6 @@ async function processarAudioComGemini(audioBlob, formatoAudio) {
 
         } catch (error) {
             console.error(error);
-            // Agora o erro exato vai aparecer na sua tela!
             contentArea.innerHTML = `<p class="placeholder-text" style="color: #ff3b30; font-size: 14px; text-align: left;"><strong>Erro:</strong> ${error.message}</p>`;
         }
     };
