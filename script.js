@@ -313,22 +313,15 @@ newRecordBtn.addEventListener('click', () => {
 saveBtn.addEventListener('click', saveCurrentNote);
 
 // ── Iniciar gravação ─────────────────────────────────
+let micStream = null; // guarda stream para liberar no stop
+
 async function startRecording() {
-  // Pedir microfone
-  let stream;
   try {
-    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
   } catch (err) {
     showToast('⚠ Permissão de microfone negada.');
     return;
   }
-
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  recognition = new SR();
-  recognition.lang = 'pt-BR';
-  recognition.continuous = true;
-  recognition.interimResults = true;
-  recognition.maxAlternatives = 1;
 
   isRecording = true;
   finalTranscript = '';
@@ -343,7 +336,20 @@ async function startRecording() {
   newRecordBtn.style.display = 'none';
 
   startTimer();
-  initAudioViz(stream);
+  initAudioViz(micStream);
+  startSR();
+}
+
+// Ciclo de reconhecimento separado — permite reiniciar no mobile
+function startSR() {
+  if (!isRecording) return;
+
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SR();
+  recognition.lang = 'pt-BR';
+  recognition.continuous      = true;
+  recognition.interimResults  = true;
+  recognition.maxAlternatives = 1;
 
   recognition.onresult = (e) => {
     let interim = '';
@@ -355,24 +361,27 @@ async function startRecording() {
         interim = text;
       }
     }
-    // Mostra final + interim
     interimTextEl.textContent = (finalTranscript + interim).trim();
   };
 
   recognition.onerror = (e) => {
-    if (e.error === 'no-speech') return; // ignora silêncio
+    // no-speech e aborted são normais no mobile — ignora
+    if (e.error === 'no-speech' || e.error === 'aborted') return;
     console.warn('SR error:', e.error);
-    if (e.error !== 'aborted') showToast('Erro no microfone: ' + e.error);
-  };
-
-  recognition.onend = () => {
-    // Reiniciar se ainda gravando (API para em silêncio)
-    if (isRecording) {
-      try { recognition.start(); } catch (_) {}
+    if (e.error === 'not-allowed') {
+      showToast('⚠ Permissão de microfone negada.');
+      stopRecording(false);
     }
   };
 
-  recognition.start();
+  recognition.onend = () => {
+    // No mobile o browser para frequentemente — reinicia com delay curto
+    if (isRecording) {
+      setTimeout(() => { if (isRecording) startSR(); }, 150);
+    }
+  };
+
+  try { recognition.start(); } catch (err) { console.warn('SR start:', err); }
 }
 
 // ── Parar gravação ────────────────────────────────────
@@ -386,9 +395,15 @@ function stopRecording(processWithAI = true) {
   stopTimer();
 
   if (recognition) {
-    recognition.onend = null; // não reiniciar
-    recognition.stop();
+    recognition.onend = null; // impede reinício
+    try { recognition.stop(); } catch (_) {}
     recognition = null;
+  }
+
+  // Libera microfone — remove ícone de mic ativo no mobile
+  if (micStream) {
+    micStream.getTracks().forEach(t => t.stop());
+    micStream = null;
   }
 
   stopAudioViz();
@@ -398,7 +413,7 @@ function stopRecording(processWithAI = true) {
   rawTranscript = raw;
 
   if (!raw) {
-    showToast('Nenhuma fala detectada.');
+    showToast('Nenhuma fala detectada. Tente falar mais perto do mic.');
     showState('idle');
     return;
   }
