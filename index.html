@@ -3,28 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gravador de Transcrição</title>
+    <title>VoxNote</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="app-container">
-        <div class="top-glow"></div>
-        
-        <div class="content-area" id="contentArea">
-            <p class="placeholder-text" id="statusText">Toque no botão abaixo para gravar.</p>
-        </div>
 
-        <div class="bottom-controls">
-            <div class="tab-toggle">
-                <span class="active">Transcrição</span>
-            </div>
-        </div>
-    </div>
-    
-    <div class="record-button-container">
-        <button id="recordBtn" class="record-btn"></button>
+  <!-- TELA: LISTA DE NOTAS -->
+  <div class="screen" id="screenList">
+    <div class="screen-header">
+      <div class="app-brand">
+        <span class="brand-dot"></span>
+        <h1 class="brand-name">VoxNote</h1>
+      </div>
+      <span class="note-count" id="noteCount">0 notas</span>
     </div>
 
-    <script src="script.js"></script>
+    <div class="notes-grid" id="notesGrid">
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">◎</div>
+        <p>Suas notas de voz aparecerão aqui.</p>
+        <p class="empty-sub">Grave algo para começar.</p>
+      </div>
+    </div>
+
+    <button class="fab" id="fabBtn" title="Nova gravação">
+      <span class="fab-icon">●</span>
+    </button>
+  </div>
+
+  <!-- TELA: GRAVAÇÃO / DETALHE -->
+  <div class="screen hidden" id="screenRecord">
+    <div class="screen-header">
+      <button class="back-btn" id="backBtn">← Notas</button>
+      <div class="header-actions">
+        <button class="action-btn" id="deleteNoteBtn" title="Excluir nota" style="display:none;">🗑</button>
+      </div>
+    </div>
+
+    <!-- Visualizador de ondas -->
+    <div class="waveform-container">
+      <canvas id="waveCanvas"></canvas>
+      <div class="recording-badge" id="recordingBadge">
+        <span class="rec-dot"></span>
+        <span class="rec-label">REC</span>
+        <span class="rec-time" id="recTime">0:00</span>
+      </div>
+    </div>
+
+    <!-- Área de texto -->
+    <div class="transcript-wrapper">
+      <!-- Estado: idle / gravando / processando / concluído -->
+      <div class="state-idle" id="stateIdle">
+        <p class="idle-msg">Toque em <strong>●</strong> para gravar.</p>
+      </div>
+
+      <div class="state-recording hidden" id="stateRecording">
+        <p class="interim-text" id="interimText"></p>
+      </div>
+
+      <div class="state-processing hidden" id="stateProcessing">
+        <div class="processing-anim">
+          <span></span><span></span><span></span>
+        </div>
+        <p class="processing-label">Refinando com IA…</p>
+      </div>
+
+      <div class="state-done hidden" id="stateDone">
+        <div class="tabs">
+          <button class="tab active" data-tab="polished">✦ Refinado</button>
+          <button class="tab" data-tab="raw">Original</button>
+        </div>
+        <div class="tab-content" id="tabPolished">
+          <div class="note-text" id="polishedText" contenteditable="true" spellcheck="true"></div>
+        </div>
+        <div class="tab-content hidden" id="tabRaw">
+          <div class="note-text raw" id="rawText"></div>
+        </div>
+        <div class="note-meta" id="noteMeta"></div>
+      </div>
+    </div>
+
+    <!-- Controles -->
+    <div class="controls-bar">
+      <div class="controls-inner">
+        <button class="ctrl-btn secondary" id="newRecordBtn" title="Nova gravação na mesma nota" style="display:none;">+ Adicionar</button>
+        <button class="record-btn" id="recordBtn">
+          <span class="record-btn-icon" id="recordBtnIcon">●</span>
+        </button>
+        <button class="ctrl-btn secondary" id="saveBtn" title="Salvar nota" style="display:none;">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <script src="script.js"></script>
 </body>
 </html>
